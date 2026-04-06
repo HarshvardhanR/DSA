@@ -35,10 +35,10 @@ public class TopKFrequentElements {
     PriorityQueue<Integer> pq = new PriorityQueue<>((a,b) -> map.get(a) - map.get(b));
 
 
-    public int[] naiveTopK(Integer[] nums, int k){
+    public int[] naiveTopK(int[] nums, int k){
         
         for(int num: nums){
-            map.getOrDefault(num, map.getOrDefault(num,0) + 1);
+            map.put(num, map.getOrDefault(num,0) + 1);
         }
 
         List<Integer> unique = new ArrayList<>(map.keySet());
@@ -47,7 +47,8 @@ public class TopKFrequentElements {
         
         int ans[] = new int[k];
         for(int i=unique.size() - 1; i>=0 && k>0; i--){
-            ans[k--] = unique.get(i);
+            ans[k - 1] = unique.get(i);
+            k--;
         }
         
         return ans;
@@ -57,7 +58,7 @@ public class TopKFrequentElements {
     public int[] priorityQueueTopK(int[] nums, int k){
         
         for(int num: nums){
-            map.getOrDefault(num, map.getOrDefault(num,0) + 1);
+            map.put(num, map.getOrDefault(num,0) + 1);
         }
 
         for(int num : map.keySet()){
@@ -75,7 +76,92 @@ public class TopKFrequentElements {
         return ans;
     }
 
+    public int[] bucketTopK(int [] nums, int k){
+        for(int num: nums){
+            map.put(num, map.getOrDefault(num,0) + 1);
+        }
+
+        List<Integer>[] buckets = new List[nums.length + 1];
+
+        for(int num : map.keySet()){
+            if(buckets[map.get(num)]==null){
+                buckets[map.get(num)] = new ArrayList<>();
+            }
+            buckets[map.get(num)].add(num);
+        }
+
+        int ans[] = new int[k];
+        for(int i=buckets.length - 1; i>=0 && k>0; i--){
+            if(buckets[i]!=null){
+                for(int num : buckets[i]){
+                    ans[k - 1] = num;
+                    k--;
+                    if(k==0) break;
+                }
+            }
+        }
+
+        return ans;
+    }
+
+    public int[] quickSelectTopK(int[] nums, int k){
+        for(int num: nums){
+            map.put(num, map.getOrDefault(num,0) + 1);
+        }
+
+        List<Integer> unique = new ArrayList<>(map.keySet());
+
+        quickSelect(unique, 0, unique.size() - 1, k);
+
+        int ans[] = new int[k];
+        for(int i=0; i<k; i++){
+            ans[i] = unique.get(i);
+        }
+
+        return ans;
+    }
+
+    public void quickSelect(List<Integer> unique, int i, int j, int k){
+        if(i>=j) return;
+
+        int p = partition(unique, i, j);
+
+        if(p==k) return;
+        else if(p>k) quickSelect(unique, i, p - 1, k);
+        else quickSelect(unique, p+1, j, k);
+    }
+
+    public int partition(List<Integer> unique, int left, int right){
+        int i = left;
+
+        for(int j=left; j<right; j++){
+            if(map.get(unique.get(j)) > map.get(unique.get(right))){
+                Collections.swap(unique, i, j);
+                i++;
+            }
+        }
+
+        Collections.swap(unique, i, right);
+
+        return i;
+    }
+
     public static void main(String[] args) {
-        
+        int nums[] = {1,2,1,2,1,3};
+        int k = 2;
+
+        TopKFrequentElements tk = new TopKFrequentElements();
+        tk.arrayPrinter(tk.bucketTopK(nums, k));
+        tk.arrayPrinter(tk.naiveTopK(nums, k));
+        tk.arrayPrinter(tk.priorityQueueTopK(nums, k));
+        tk.arrayPrinter(tk.quickSelectTopK(nums, k));
+    }
+
+    public void arrayPrinter(int[] nums){
+        System.out.print("[ ");
+        for(int i=0; i<nums.length; i++){
+            System.out.print(nums[i] + " ");
+        }
+        System.out.println("]");
     }
 }
